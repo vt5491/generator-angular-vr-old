@@ -8,35 +8,68 @@ var inquirer = require('inquirer');
 
 module.exports = yeoman.generators.Base.extend({
 
-  initializing: function () {
-    if( this.fs.exists( this.destinationPath('/app/scripts/app.js'))) {
-      this.log("angular base app found");
-      //this.composeWith('angular',  {args: ['']} );
-      this.angularAppFound = true;
-    }
-    else {
-      this.log("angular base app not found");
-      this.angularAppFound = false;
-    }
+  initializing:
+  {
+    angularVRInit: function () {
+      //this.log('appname=' + this.determineAppname());
+      if( this.fs.exists( this.destinationPath('/app/scripts/app.js'))) {
+        //this.log("Angular base app found. Skipping angular install.\n");
+        //this.composeWith('angular',  {args: ['']} );
+        this.angularAppFound = true;
+      }
+      else {
+        //this.log("angular base app not found");
+        this.angularAppFound = false;
+      }
 
-    // initialize service names
-    this.mainService = 'main-service';
-    this.baseService = 'base';
-  },
+      this.defaultArtifactNames = {};
+      // services
+      this.defaultArtifactNames.mainService = 'main-service';
+      this.defaultArtifactNames.baseService = 'base';
+      this.defaultArtifactNames.utilsService = 'utils';
+      
+      // controllers
+      // note: main controller is gen'd by the angular generator, thus we comment it out
+      // so we don't gen it again.
+      //this.defaultArtifactNames.mainController = 'main';
+      this.defaultArtifactNames.custController = 'cust';
 
-  prompting: {
-    // f1: function () {
-    //   var done = this.async();
-    //   this.log('f1 hi');
-    //   done();main
-    // },
-    // f2: function () {
-    //   this.log('f2 hi');
-    // }
+      // directives
+      this.defaultArtifactNames.canvasKeysDirective = 'canvas-keys';
+      
+      this.artifacts = {};
+      this.artifacts.services = {};
+      this.artifacts.controllers = {};
+      this.artifacts.directives = {};
+      
+      // initialize service names
+      this.artifacts.services.mainService = this.defaultArtifactNames.mainService;
+      this.artifacts.services.base = this.defaultArtifactNames.baseService;
+      this.artifacts.services.utils = this.defaultArtifactNames.utilsService;
+
+      // initialize controller names
+      this.artifacts.controllers.cust = this.defaultArtifactNames.custController;
+      
+      // initialize directive names
+      this.artifacts.directives.canvasKeys = this.defaultArtifactNames.canvasKeysDirective;
+    },
+
     angularBasePrompt: function () {
-      //var done = this.async();
+      var done = this.async();
 
-      this.log( 'Welcome to the second ' + chalk.red('AngularVr') + ' generator!');
+      this.log( 'Welcome to the second ' + chalk.red('angular-vr') + ' generator.\n');
+      // TODO: only issue this message if it looks like its not an empty directory
+      // or if its not a pre-existing angular app
+      this.log( 'Note: this generator will not create the root folder for you project.');
+      this.log( 'It will create the artifacts in the current dir.');
+      this.log( 'In short, create a subdirectory with the name of your app and run the generator from there');
+
+      if(this.angularAppFound){
+        this.log("Angular base app found. Skipping angular install.\n");
+      }
+      else {
+        this.log("angular base app not found");
+      };
 
       var prompts = [];
 
@@ -51,106 +84,115 @@ module.exports = yeoman.generators.Base.extend({
           this.props = props;
           this.appName = props.appName;
 
-          //done();
+          done();
         }.bind(this));
       };
     },
-    // f2: function () {
-    //   this.log('f2 hi');
-    // }
+
+  }, // end initializing
+
+  prompting: {
 
     angularVrPrompt: function () {
       var done = this.async();
-      //this.log('now in angularVrPrompt');
+      
       var prompts = [{
         type: 'checkbox',
         name: 'artifactsToRename',
         message: 'Please specify any name you wish to override:',
         choices: [
           {
-            value: new inquirer.Separator("--- services")
-            //name: 'main-service.js',
-            //checked: false
+            value: new inquirer.Separator("--- services ---")
           },
           {
             value: 'mainService',
-            name: this.mainService,
+            name: this.artifacts.services.mainService,
             checked: false
           },
           {
             value: 'baseService',
-            name: this.baseService,
+            name: this.artifacts.services.base,
             checked: false
-          }
+          },
+          {
+            value: 'utilsService',
+            name: this.artifacts.services.utils,
+            checked: false
+          },
+          {
+            value: new inquirer.Separator("--- controllers ---")
+          },
+          {
+            value: 'custController',
+            name: this.artifacts.controllers.cust,
+            checked: false
+          },          
+          {
+            value: new inquirer.Separator("--- directives ---")
+          },
+          {
+            value: 'canvasKeysDirective',
+            name: this.artifacts.directives.canvasKeys,
+            checked: false
+          },          
         ]
       }];
       this.prompt(prompts, function (props) {
-        //this.log('props.artifactsToRename=' + props.artifactsToRename);
-
+        
         this.artifactsToRename = props.artifactsToRename;
-        //debugger;
-        // this.artifactsToRename = [];
-
-        // if (this.mainService) {
-        //   this.artifactsToRename.push("'mainService'");
-        // }
-
-        // this.props = props;
-        // //this.artifacts = props.artifacts;
 
         done();
       }.bind(this));
     },
 
     renameArtifactsPrompt: function() {
-      //this.log('now in renameartifactsPrompt');
       var done = this.async();
       
-      //this.log('this.artifactstorename.length= ' + this.artifactsToRename.length);
-      //this.log('this.artifactsToRename=' + this.artifactsToRename);
-
       var prompts = [];
+      
       this.artifactsToRename.forEach(function (val, index, array) {
-        //console.log(index + ': ' + val);
-        //this.log('new name for ' + val);
-
+        debugger;
         prompts.push( {
           type: 'input',
           name: val,
-          message: 'new name for ' + val + ':'
+          //message: 'new name for ' + val + ' (current: ' this.defaultArtifactNames[val] + '):'
+          message: 'new name for ' + this.defaultArtifactNames[val]
         });
 
       }.bind(this));
 
       this.prompt(prompts, function(props) {
-        //this.log('props 2=' + props);
-
         Object.keys(props).forEach(function (key, index, array){
           switch(key) {
           case 'mainService':
-            //this.log('switch: change mainService');
-            this.mainService = props.mainService;
+            this.artifacts.services.mainService = props.mainService;
             break;
           case 'baseService':
-            //this.log('switch: change base');
-            this.baseService = props.baseService;
+            this.artifacts.services.base = props.baseService;
+            break;
+          case 'utilsService':
+            this.artifacts.services.utils = props.utilsService;
+            break;
+          case 'custController':
+            this.artifacts.controllers.cust = props.custController;
+            break;
+          case 'canvasKeysDirective':
+            this.artifacts.directives.canvasKeys = props.canvasKeysDirective;
             break;
           default:
             this.log('switch: found unknown key:' + key);
           }
 
         }.bind(this));
-        //debugger;
+        
         done();
       }.bind(this));
-
-      //done();
     },
 
-    debug: function() {
-      this.log('this.mainService=' + this.mainService);
-      this.log('this.baseService=' + this.baseService);
-    }
+    // debug: function() {
+    //   this.log('this.artifacts.services.mainService=' + this.artifacts.services.mainService);
+    //   this.log('this.artifacts.services.baseService=' + this.artifacts.services.baseService);
+    // }
   },
 
   writing: {
@@ -169,78 +211,50 @@ module.exports = yeoman.generators.Base.extend({
     }
   },
 
-//    // Note: this has to be here, before install
-//    // refer to m-iconic yo generator
-    subgenerators: function () {
-      var done = this.async();
+  subgeneratorsApp: function () {
 
-      this.log("now executing subgenerators");
-      //this.log("path= " + this.destinationPath('/app/scripts/app.js')); 
-      //this.log("path exitsts= " + this.fs.exists(this.destinationPath('/app/scripts/app.js'))); 
-      //this.composeWith('angular:controller',  {args: ['mycontroller']} );
-      this.log("\nnow done with subgeneration");
-      done();
-  }, 
+      if (!this.angularAppFound) {
+        var done = this.async();
+
+        this.log('now creating base Angular app...');
+        //this.composeWith('angular:service',  {args: [ this.appName ]} )
+        this.composeWith('angular',  {args: [ this.appName ]} )
+         .on('end',function(){
+                        this.log('in end handler of angular base install');
+                        done();
+                    }.bind(this));
+        
+        done();
+      }
+
+  },
 
   subgeneratorServices: function () {
-    debugger;
-    Object.keys(this).forEach( function (key, index, array) {
-      //this.log('key.search=' + key.search(/Service$/));
-      if( key.search(/Service/) > 0) {
-        this.log('regex: found key ' + key);
-        this.log('regex: this[key]= ' + this[key]);
-        this.composeWith('angular:service',  {args: [ this[key] ]} );
-      };
+    Object.keys(this.artifacts.services).forEach( function (key, index, array) {
+      //this.log('regex: found key ' + key);
+      this.composeWith('angular:service',  {args: [ this.artifacts.services[key] ]} );
     }.bind(this));
-    
+  },
+
+  subgeneratorControllers: function () {
+    Object.keys(this.artifacts.controllers).forEach( function (key, index, array) {
+      //this.log('regex: found key ' + key);
+      this.composeWith('angular:controller',  {args: [ this.artifacts.controllers[key] ]} );
+    }.bind(this));
+  },
+
+  subgeneratorDirectives: function () {
+    Object.keys(this.artifacts.directives).forEach( function (key, index, array) {
+      //this.log('regex: found key ' + key);
+      this.composeWith('angular:directive',  {args: [ this.artifacts.directives[key] ]} );
+    }.bind(this));
+  },
+  
+  end: function () {
+    //var done = this.async();
+    this.log("all done.");
+    //this.log("\n");
+    //done();
   }
-//  subgenerators_read: function () {
-//    this.conflicter.force = true
-//    var fp = this.destinationPath('app/scripts/controllers/mycontroller.js');
-//    var fc = this.fs.read(fp);
-//
-//    var a = _.map( fc.split('\n'));
-//    var obj = this;
-//
-//    var f = function(str) {
-//        obj.log('f.str=' + str);
-//        var result = '';
-//
-//        if (/^\s\s\}\);/.test(str)) {
-//          result +=  '<%= stuff %>' + '\n'   
-//        }
-//        result += str + '\n';
-//
-//        return result;
-//    };
-//
-//    //this.log('a.length=' + a.length);
-//    var templatizedArr = _.map(a, f);
-//
-//    this.log('templatizedArr=' + templatizedArr);
-//
-//    var fc = null;
-//
-//    var strFunc = function(str) {
-//        fc += str;
-//    };
-//
-//    _.map(templatizedArr, strFunc);
-//   
-//    //fc += '\nhello there 3\n';
-//    this.fs.write(fp, fc);
-//    //this.conflicter.force = false
-//  },
-//
-//  subgenerators_edit: function () {
-//    var fp = this.destinationPath('app/scripts/controllers/mycontroller.js');
-//
-//    this.fs.copyTpl(
-//      //this.templatePath(fp),
-//      fp,
-//      fp,
-//        { stuff: 'abc'}
-//    );
-//  }, 
 
 });
