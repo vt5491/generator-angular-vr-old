@@ -1,3 +1,4 @@
+
 'use strict';
 
 // TODO: write some uts for the generator
@@ -7,6 +8,7 @@ var chalk = require('chalk');
 var yosay = require('yosay');
 var _ = require('lodash');
 var inquirer = require('inquirer');
+var async = require('async');
 
 module.exports = yeoman.generators.Base.extend({
 
@@ -27,7 +29,7 @@ module.exports = yeoman.generators.Base.extend({
       this.defaultArtifactNames = {};
       // services
       this.defaultArtifactNames.mainService = 'main-service';
-      //this.defaultArtifactNames.mainService = 'mainservice';
+      //this.defaultArtifactNames.mainSeorvice = 'mainservice';
       this.defaultArtifactNames.baseService = 'base';
       this.defaultArtifactNames.utilsService = 'utils';
       
@@ -66,7 +68,7 @@ module.exports = yeoman.generators.Base.extend({
       this.log( 'Note: this generator will not create the root folder for you project.');
       this.log( 'It will create the artifacts in the current dir.');
       this.log( 'In short, create a subdirectory with the name of your app and run the generator from there');
-
+      //debugger;
       if(this.angularAppFound){
         this.log("Angular base app found. Skipping angular install.\n");
       }
@@ -156,7 +158,7 @@ module.exports = yeoman.generators.Base.extend({
       var prompts = [];
       
       this.artifactsToRename.forEach(function (val, index, array) {
-        debugger;
+        //debugger;
         prompts.push( {
           type: 'input',
           name: val,
@@ -200,37 +202,79 @@ module.exports = yeoman.generators.Base.extend({
     // }
   },
 
-  writing: {
-    app: function () {
+  // writing: {
+  //   app: function () {
 
-      var done = this.async();
-      this.fs.copyTpl(
-        this.templatePath('_vt_marker.json'),
-        this.destinationPath('vt_marker.json'),
-        { title: 'abc'}
-      );
-      done();
-    },
+  //     var done = this.async();
+  //     this.fs.copyTpl(
+  //       this.templatePath('_vt_marker.json'),
+  //       this.destinationPath('vt_marker.json'),
+  //       { title: 'abc'}
+  //     );
+  //     done();
+  //   },
 
-    projectfiles: function () {
-    }
-  },
+  //   projectfiles: function () {
+  //   }
+  // },
 
-  subgeneratorsApp: function () {
+  
+  //_subgeneratorApp: function (cb) {
+  subgeneratorApp: function () {
 
       if (!this.angularAppFound) {
         var done = this.async();
+       
+        // var after = function(object, functionName, action) {
+        //   var oldFunction = object.functionName;
+        //   var newFunction = function() {
+        //     oldFunction();
+        //     action();
+        //   };
+        //   // restore original
+        //   object.functionName = oldFunction;
+        // };
+        
+        // after(this, 'composeWith', done);
+        // var origFunction = this.composeWith;
+        // // var newFunction = function() {
+        // //   origFunction();
+        // //   //this.composeWith();
+        // //   done();
+        // // }.bind(this);
+        // //this.composeWith = newFunction;
+        // this.composeWith = function () {
+        //   this.log('now in first step of new function, this.appName=' + this.appName);
+        //   origFunction.apply(this, ['angular:service', {args: [ this.appName ]} ])
+        //     // .on('end', function() {
+        //     //   this.log('hello');
+        //     //}.bind(this));
+        //   ;
+        //   done();
+        // }.bind(this);
+        // this.log('about to call aspected composeWith');
+        // //this.composeWith('angular:service',  {args: [ this.appName ]} );
+        // this.composeWith();
+        // this.log('back from aspected composeWith');
+        // // restore original
+        // this.composeWith = origFunction;
 
+        
+        
         this.log('now creating base Angular app...');
+        
         //this.composeWith('angular:service',  {args: [ this.appName ]} )
         //this.invoke('angular:service',  {args: [ this.appName ]} )
+        // going from yeoman-generator 19.2 -> 20.3 did not fix the problem
         // doesn't work (does not drive .on)
         //this.composeWith('angular',  {args: [ this.appName ]} )
         // works (drives .on)
         this.invoke('angular',  {args: [ this.appName ]} )
+        //this.composeWith('angular',  {args: [ this.appName ]} )        
          .on('end',function(){
                         this.log('>>>in end handler of angular base install');
                         done();
+                        //cb();
                     }.bind(this));
         
         //done();
@@ -238,11 +282,12 @@ module.exports = yeoman.generators.Base.extend({
 
   },
 
+ // _subgeneratorServices: function (cb) {
   subgeneratorServices: function () {
     Object.keys(this.artifacts.services).forEach( function (key, index, array) {
       //this.log('regex: found key ' + key);
       this.composeWith('angular:service',  {args: [ this.artifacts.services[key] ]} );
-    }.bind(this));
+    }.bind(this));    
   },
 
   subgeneratorControllers: function () {
@@ -259,6 +304,29 @@ module.exports = yeoman.generators.Base.extend({
     }.bind(this));
   },
 
+  // // use async to synchronize the subgenerator steps
+  // subgeneratorAll: function () {
+  //   try {
+  //     async.waterfall([
+  //     //async.series([
+  //       function sga (cb) {
+  //         this._subgeneratorApp(cb);
+  //       }.bind(this),
+  //       function sgs (cb) {
+  //         this._subgeneratorServices(cb);
+  //       }.bind(this),
+        
+  //       //this._subgeneratorServices(callback),
+  //       // this._subgeneratorControllers(),
+  //       // this._subgeneratorDirectives()
+  //    ]);
+  //   }
+  //   catch(e){
+  //     this.log('subgeneratorAll: caught error ' + e);
+  //   };
+  // },
+
+  /*
   // helper method
   _markupFile: function (filePath) {
     var fileContents = this.fs.read(filePath);
@@ -340,7 +408,7 @@ module.exports = yeoman.generators.Base.extend({
     }.bind(this));
     
   }, 
-  
+*/  
   end: function () {
     //var done = this.async();
     this.log("end: all done.");
@@ -349,3 +417,4 @@ module.exports = yeoman.generators.Base.extend({
   }
 
 });
+  
