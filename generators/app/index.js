@@ -12,51 +12,64 @@ var async = require('async');
 
 module.exports = yeoman.generators.Base.extend({
 
+  // separate out globals and constants, so we can call this method from
+  // our uts as well
+  _initGlobals: function (cb) {
+    this.defaultArtifactNames = {};
+    // services
+    this.defaultArtifactNames.mainService = 'main-service';
+    //this.defaultArtifactNames.mainSeorvice = 'mainservice';
+    this.defaultArtifactNames.baseService = 'base';
+    this.defaultArtifactNames.utilsService = 'utils';
+    
+    // controllers
+    // note: main controller is gen'd by the angular generator, thus we comment it out
+    // so we don't gen it again.
+    //this.defaultArtifactNames.mainController = 'main';
+    this.defaultArtifactNames.custController = 'cust';
+
+    // directives
+    this.defaultArtifactNames.canvasKeysDirective = 'canvas-keys';
+    
+    this.artifacts = {};
+    this.artifacts.services = {};
+    this.artifacts.controllers = {};
+    this.artifacts.directives = {};
+    
+    // initialize service names
+    this.artifacts.services.mainService = this.defaultArtifactNames.mainService;
+    this.artifacts.services.base = this.defaultArtifactNames.baseService;
+    this.artifacts.services.utils = this.defaultArtifactNames.utilsService;
+
+    // initialize controller names
+    this.artifacts.controllers.cust = this.defaultArtifactNames.custController;
+    
+    // initialize directive names
+    this.artifacts.directives.canvasKeys = this.defaultArtifactNames.canvasKeysDirective;
+
+    // call callback function, if any
+    //(typeof cb === 'undefined' || null === cb) ? null : cb();    
+    //if (typeof cb !== 'undefined' && null !== cb) { cb();};
+    typeof cb === 'function' && cb();
+  },
+  
   initializing:
   {
     angularVRInit: function () {
       //this.log('appname=' + this.determineAppname());
-      if( this.fs.exists( this.destinationPath('/app/scripts/app.js'))) {
-        //this.log("Angular base app found. Skipping angular install.\n");
+      this.log('this.options.skipBaseAppInstall = ' + this.options.skipBaseAppInstall);
+      this.log('app.js destinataionPath=' + this.destinationPath('app/scripts/app.js'));
+      if( this.fs.exists( this.destinationPath('app/scripts/app.js'))  || this.options.skipBaseAppInstall) {
+        this.log("Angular base app found. Skipping angular install.\n");
         //this.composeWith('angular',  {args: ['']} );
         this.angularAppFound = true;
       }
       else {
-        //this.log("angular base app not found");
+        this.log("angular base app not found");
         this.angularAppFound = false;
       }
 
-      this.defaultArtifactNames = {};
-      // services
-      this.defaultArtifactNames.mainService = 'main-service';
-      //this.defaultArtifactNames.mainSeorvice = 'mainservice';
-      this.defaultArtifactNames.baseService = 'base';
-      this.defaultArtifactNames.utilsService = 'utils';
-      
-      // controllers
-      // note: main controller is gen'd by the angular generator, thus we comment it out
-      // so we don't gen it again.
-      //this.defaultArtifactNames.mainController = 'main';
-      this.defaultArtifactNames.custController = 'cust';
-
-      // directives
-      this.defaultArtifactNames.canvasKeysDirective = 'canvas-keys';
-      
-      this.artifacts = {};
-      this.artifacts.services = {};
-      this.artifacts.controllers = {};
-      this.artifacts.directives = {};
-      
-      // initialize service names
-      this.artifacts.services.mainService = this.defaultArtifactNames.mainService;
-      this.artifacts.services.base = this.defaultArtifactNames.baseService;
-      this.artifacts.services.utils = this.defaultArtifactNames.utilsService;
-
-      // initialize controller names
-      this.artifacts.controllers.cust = this.defaultArtifactNames.custController;
-    
-      // initialize directive names
-      this.artifacts.directives.canvasKeys = this.defaultArtifactNames.canvasKeysDirective;
+      _defineGlobals();
     },
 
     angularBasePrompt: function () {
@@ -304,6 +317,16 @@ module.exports = yeoman.generators.Base.extend({
     }.bind(this));
   },
 
+  vtDebug: function (msg, cb) {
+    var outMsg = msg || 'now in vtDebug';
+
+    //cb = _.isFunction(cb) ? cb : function () {};
+    
+    this.log(outMsg);
+
+    typeof cb === 'undefined' ? null : cb();
+    //cb();
+  },
   // // use async to synchronize the subgenerator steps
   // subgeneratorAll: function () {
   //   try {
@@ -326,9 +349,26 @@ module.exports = yeoman.generators.Base.extend({
   //   };
   // },
 
-  /*
+  // helper methods
+
+  // insert template tags into base angular files
+  _markupBaseFile: function (filePath, cb) {
+    // var noop = function(){}; // do nothing.
+    // cb = cb || noop;
+    var baseFileContents = this.fs.read(filePath);
+
+    this.log('_markupBaseFile: baseFileContents=' + baseFileContents);
+
+    // call callback function, if any    
+    //if (typeof cb !== 'undefined' && null !== cb) { cb();};
+    typeof cb === 'function' && cb("abc");
+
+    return "def";
+  },
+
   // helper method
-  _markupFile: function (filePath) {
+  _markupFile_orig: function (filePath) {
+ // _injectTemplate: function (filePath) {
     var fileContents = this.fs.read(filePath);
     this.conflicter.force = true;
 
@@ -364,7 +404,7 @@ module.exports = yeoman.generators.Base.extend({
     this.fs.write(filePath, fileContents);
   },
    
-  
+  /*  
   // insert tags into the base angular artifacts, so we can later inject our custom code
   markupArtifacts: function () {
     // services

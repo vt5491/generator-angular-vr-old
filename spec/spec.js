@@ -120,7 +120,7 @@ describe('angular-vr:app', function () {
     // compassBootstrap: true,
     // modules: [],
     artifactsToRename: []
-  };
+  }
 
  var genOptions = {
     'appPath': 'app',
@@ -223,9 +223,47 @@ describe('angular-vr:app', function () {
   });
   
   it('_markupBaseFile alters base angular files properly', function (done) {
+    //var baseFileContents = this.fs.read(filePath);
+    //var someObject = jasmine.createSpyObj('someObject', [ 'method1', 'method2' ]);
     
+    // someObject.method1.and.callFake(function() {
+    //   throw 'an-exception';
+    // });
+    // var filePath = angular_vr.destinationPath('app/scripts/services/' + [ angular_vr.artifacts.services['mainService'] ] + '.js');
+    // console.log('spec.js: filePath=' + filePath);
+    // stub the read method
+    angular_vr.fs.read = function(fp) {
+      var fileString = 
+      "'use strict\'\n" +
+      '/**\n' +
+      ' * @ngdoc service\n' +
+      ' */\n' +
+      "angular.module('abcApp')\n" +
+      "  .service('mainService', function () {\n" +
+      '    // AngularJS will instantiate a singleton by calling "new" on this function\n' +
+      '  });\n';
+
+      return fileString;
+    };
+
+    angular_vr._markupBaseFile('', function(result,e) {
+      console.log('result=' + result);
+      done();
+    });
+    
+    //done();
   });  
 
+  // test call of _markupBaseFile without a stub, and no callback
+  it('_markupBaseFile alters base angular files properly', function (done) {
+
+    var result = angular_vr._markupBaseFile('/home/vturner/vtstuff/tmp/test.txt');
+
+    console.log('result2=' + result);
+    assert.ok(result === 'def');
+    done();
+  });  
+  
 /*
   before(function (done) {
     helpers.createDummyGenerator('angular');
